@@ -79,14 +79,16 @@ def cg_batch(A_bmm, B, M_bmm=None, X0=None, rtol=1e-3, atol=0., maxiter=None, ve
             beta = (R_k1 * Z_k1).sum(1) / denominator
             P_k = Z_k1 + beta.unsqueeze(1) * P_k1
 
-        denominator = (P_k * A_bmm(P_k)).sum(1)
+        AP_k = A_bmm(P_k)
+
+        denominator = (P_k * AP_k).sum(1)
         denominator[denominator == 0] = 1e-8
         alpha = (R_k1 * Z_k1).sum(1) / denominator
         X_k = X_k1 + alpha.unsqueeze(1) * P_k
-        R_k = R_k1 - alpha.unsqueeze(1) * A_bmm(P_k)
+        R_k = R_k1 - alpha.unsqueeze(1) * AP_k
         end_iter = time.perf_counter()
 
-        residual_norm = torch.norm(A_bmm(X_k) - B, dim=1)
+        residual_norm = torch.norm(R_k, dim=1)
 
         if verbose:
             print("%03d | %8.4e %4.2f" %
